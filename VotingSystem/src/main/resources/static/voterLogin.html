@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voter Verification</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <script>
+        // BACK BUTTON BLOCKER
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () { history.go(1); };
+
+        // Ensure they aren't trying to bypass the lock
+        if (sessionStorage.getItem("voterModeActive") !== "true") {
+            window.location.href = "index.html";
+        }
+    </script>
+    <script src="script.js"></script>
+<script>
+    // Enable the back-button block
+    window.onload = disableBack;
+
+    // Warning on Reload
+    window.onbeforeunload = function() {
+        return "Warning: Reloading will terminate your voting session!";
+    };
+
+    // Auto-Lock if they exit Fullscreen
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && sessionStorage.getItem("voterModeActive")) {
+            alert("Security Violation: Fullscreen Exited!");
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    });
+</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body oncontextmenu="return false;">
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card">
+        <h2>Voter Verification</h2>
+        <input type="text" id="vid" placeholder="Enter Voter ID">
+        <div id="my_camera"></div>
+        <button onclick="verify()">Verify Face & Vote</button>
+        
+        <div style="margin-top: 40px;">
+            <p onclick="adminUnlock()" style="cursor:pointer; font-size:10px; width: 100px; height: 40px; align-content: center; background-color: red; color: whitesmoke;">Admin System Unlock</p>
+        </div>
+    </div>
+
+    <script>
+        Webcam.set({ width: 320, height: 240, image_format: 'jpeg', jpeg_quality: 90 });
+        Webcam.attach('#my_camera');
+
+        async function verify() {
+            Webcam.snap(async (data_uri) => {
+                const res = await fetch('/api/voter/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ voterId: document.getElementById('vid').value, faceData: data_uri })
+                });
+                const status = await res.text();
+                if (status === "MATCH") {
+                    localStorage.setItem("currentVoterId", document.getElementById('vid').value);
+                    window.location.href = "vote.html";
+                } else { alert("Access Denied: " + status); }
+            });
+        }
+
+        async function adminUnlock() {
+            const pass = prompt("SYSTEM LOCKED. Enter Admin Password to return to Dashboard:");
+            if (!pass) return;
+
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: 'admin', password: pass })
+            });
+
+            if (await res.text() === "SUCCESS") {
+                sessionStorage.setItem("adminLoggedIn", "true");
+                sessionStorage.removeItem("voterModeActive");
+                window.location.href = "dashboard.html";
+            } else { alert("Invalid Password!"); }
+        }
+    </script>
+    
+</body>
+</html>

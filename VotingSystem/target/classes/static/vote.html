@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cast Vote</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // PREVENT BACK BUTTON
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () { history.go(1); };
+
+        if (!localStorage.getItem("currentVoterId")) {
+            window.location.href = "voterLogin.html";
+        }
+    </script>
+    
+
+    
+    <script src="script.js"></script>
+<script>
+    // Enable the back-button block
+    window.onload = disableBack;
+
+    // Warning on Reload
+    window.onbeforeunload = function() {
+        return "Warning: Reloading will terminate your voting session!";
+    };
+
+    // Auto-Lock if they exit Fullscreen
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && sessionStorage.getItem("voterModeActive")) {
+            alert("Security Violation: Fullscreen Exited!");
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    });
+
+    
+</script>
+</head>
+<body onload="loadCandidates()">
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card">
+        <h2>Select Candidate</h2>
+        <div id="candidate-list"></div>
+    </div>
+    <script>
+        async function loadCandidates() {
+            const res = await fetch('/api/candidates');
+            const data = await res.json();
+            let html = '';
+            data.forEach(c => {
+                html += `<div class="candidate-item" style="margin-bottom:10px; border-bottom:1px solid #ddd; padding:10px;">
+                            <b>${c.name}</b><br>
+                            <button onclick="castVote(${c.id})">Vote</button>
+                         </div>`;
+            });
+            document.getElementById('candidate-list').innerHTML = html;
+        }
+
+        async function castVote(cid) {
+            if(!confirm("Confirm your vote?")) return;
+            const vid = localStorage.getItem("currentVoterId");
+            const res = await fetch(`/api/voter/vote?voterId=${vid}&candidateId=${cid}`, {method: 'POST'});
+            
+            if (await res.text() === "SUCCESS") {
+                alert("Thank you for voting! An email will sent to the registered mail");
+                localStorage.removeItem("currentVoterId");
+                // Go back to the LOCKED voter login for the next person
+                window.location.href = "voterLogin.html"; 
+            }
+        }
+    </script>
+</body>
+</html>

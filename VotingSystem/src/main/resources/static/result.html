@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Election Audit</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Responsive Layout for Command Center */
+        body { 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            padding: 20px; 
+            overflow-y: auto; 
+        }
+
+        /* Stats Bar Styling */
+        .stats-container { 
+            display: flex; 
+            gap: 15px; 
+            width: 100%; 
+            max-width: 800px; 
+            margin-bottom: 20px; 
+        }
+
+        .stat-card { 
+            background: rgba(255, 255, 255, 0.95); 
+            flex: 1; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
+            border-top: 5px solid #007bff; 
+        }
+
+        .stat-card h4 { margin: 0; font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card p { margin: 10px 0 0 0; font-size: 2rem; font-weight: bold; color: #2c3e50; }
+
+        /* Main Visuals Container */
+        .dashboard-container { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 850px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
+        }
+
+        /* Winner Banner Logic */
+        #winner-banner { 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #f1c40f; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            display: none; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 1.3rem;
+            border: 1px solid #f1c40f;
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .sync-tag { color: white; font-size: 0.8rem; margin-bottom: 10px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <h2 style="color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); letter-spacing: 2px;">📊 LIVE ELECTION AUDIT</h2>
+    <div class="sync-tag">📡 System Live | Auto-refreshing every 5s | Last Sync: <span id="sync-time">--</span></div>
+
+    <div id="winner-banner"></div>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <h4>Total Registered</h4>
+            <p id="total-voters">0</p>
+        </div>
+        <div class="stat-card" style="border-top-color: #28a745;">
+            <h4>Ballots Cast</h4>
+            <p id="votes-cast">0</p>
+        </div>
+        <div class="stat-card" style="border-top-color: #f1c40f;">
+            <h4>Voter Turnout</h4>
+            <p id="turnout-rate">0%</p>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <h3 style="margin-top: 0; color: #333;">Live Vote Distribution</h3>
+        <div style="height: 350px; position: relative;">
+            <canvas id="resultChart"></canvas>
+        </div>
+        <div style="margin-top: 25px; display: flex; gap: 10px;">
+            <button id="refreshBtn" onclick="fetchAllData()" style="width: auto; padding: 10px 25px;">Manual Refresh</button>
+            <button class="secondary-btn" onclick="location.href='dashboard.html'" style="width: auto; padding: 10px 25px;">Back to Admin</button>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        /**
+         * Fetches all real-time data from the backend.
+         * Ensure VotingController.java has /api/candidates and /api/admin/voters.
+         */
+        async function fetchAllData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerText = "Syncing...";
+            
+            try {
+                // 1. Fetch Candidate List and Counts
+                const cRes = await fetch('/api/candidates?t=' + Date.now());
+                if (!cRes.ok) throw new Error("Candidates API Offline");
+                const candidates = await cRes.json();
+
+                // 2. Fetch Voter Enrollment and Status
+                const vRes = await fetch('/api/admin/voters?t=' + Date.now());
+                if (!vRes.ok) throw new Error("Voters API Offline");
+                const voters = await vRes.json();
+
+                updateUI(candidates, voters);
+                btn.innerText = "Manual Refresh";
+                document.getElementById('sync-time').innerText = new Date().toLocaleTimeString();
+            } catch (err) {
+                console.error("Critical Sync Failure:", err);
+                btn.innerText = "Connection Error";
+            }
+        }
+
+        /**
+         * Processes data and updates the visual elements.
+         */
+        function updateUI(candidates, voters) {
+            // Calculation of Voter Turnout
+            const total = voters.length;
+            const votedCount = voters.filter(v => v.hasVoted === true).length; // Maps to Voter.java boolean
+            
+            document.getElementById('total-voters').innerText = total;
+            document.getElementById('votes-cast').innerText = votedCount;
+            document.getElementById('turnout-rate').innerText = total > 0 ? ((votedCount / total) * 100).toFixed(1) + "%" : "0%";
+
+            // Advanced Winner/Tie Recognition Logic
+            const maxVotes = Math.max(...candidates.map(c => c.voteCount || 0));
+            const banner = document.getElementById('winner-banner');
+            
+            if (maxVotes > 0) {
+                const winners = candidates.filter(c => (c.voteCount || 0) === maxVotes);
+                const winnerText = winners.map(w => w.name).join(" & ");
+                
+                banner.innerText = winners.length > 1 
+                    ? `🤝 JOINT LEADERS: ${winnerText} (${maxVotes} Votes each)` 
+                    : `🏆 CURRENT LEADER: ${winnerText} (${maxVotes} Votes)`;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+
+            renderChart(candidates);
+        }
+
+        /**
+         * Renders the dynamic bar chart using Chart.js.
+         */
+        function renderChart(data) {
+            const ctx = document.getElementById('resultChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(c => c.name),
+                    datasets: [{
+                        label: 'Verified Ballots',
+                        data: data.map(c => c.voteCount || 0),
+                        backgroundColor: '#3498db',
+                        borderColor: '#2980b9',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, color: '#666' },
+                            grid: { color: '#f0f0f0' }
+                        },
+                        x: { ticks: { color: '#333', font: { weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        // Automatic polling interval to keep data fresh
+        setInterval(fetchAllData, 5000);
+        window.onload = fetchAllData;
+    </script>
+</body>
+</html>

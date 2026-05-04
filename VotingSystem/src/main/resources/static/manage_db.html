@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // ALLOW ACCESS if either the Admin is logged in OR we just came from the Locked Dashboard
+        const isAdmin = sessionStorage.getItem("adminLoggedIn") === "true";
+        const isLockedMode = sessionStorage.getItem("lockedModeActive") === "true";
+
+        if (!isAdmin && !isLockedMode) {
+            alert("Access Denied! Please login as Admin.");
+            window.location.href = "index.html";
+        }
+    </script>
+    <style>
+        
+        /* Modern UI Tweaks for Management Sections */
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5); /* Soft contrast inside glass card */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            text-align: left;
+            transition: transform 0.2s;
+        }
+        
+        .section:hover {
+            transform: scale(1.01);
+        }
+
+        h3 { 
+            margin-top: 0; 
+            color: #2c3e50; 
+            border-bottom: 3px solid #27ae60; 
+            display: inline-block;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .btn-group { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 15px; 
+            flex-wrap: wrap; 
+        }
+
+        /* Override global button for danger actions */
+        .danger-btn { 
+            background: #e74c3c !important; 
+            flex: 1;
+            min-width: 140px;
+        }
+        .danger-btn:hover { background: #c0392b !important; }
+
+        .reset-btn { 
+            background: #2c3e50 !important; 
+            flex: 1;
+            min-width: 140px;
+        }
+        .reset-btn:hover { background: #000000 !important; }
+
+        .secondary-btn {
+            background: #7f8c8d !important;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card" style="max-width: 650px; margin: 30px auto;">
+        <h2 style="color: #2c3e50; margin-bottom: 5px;">⚙️ Database Management</h2>
+        <p style="font-size: 0.9em; color: #666; margin-bottom: 20px;">Secured Administrator Operations</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 25px;">
+
+        <div class="section">
+            <h3>Voter Control</h3>
+            <p style="font-size: 0.85em; color: #444; line-height: 1.4;">
+                Removing a voter will automatically update the live results if they have already cast a ballot.
+            </p>
+            <input type="text" id="voterId" placeholder="Enter Voter ID (e.g., V001)">
+            <div class="btn-group">
+                <button class="danger-btn" onclick="reqDelete('voter', 'single')">Delete Voter</button>
+                <button class="reset-btn" onclick="reqDelete('voter', 'all')">Reset All Results</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Candidate Control</h3>
+            <p style="font-size: 0.85em; color: #444; line-height: 1.4;">
+                Removing a candidate deletes their profile and all associated votes from the system.
+            </p>
+            <input type="text" id="candidateId" placeholder="Enter Candidate ID (e.g., 101)">
+            <div class="btn-group">
+                <button class="danger-btn" onclick="reqDelete('candidate', 'single')">Remove Candidate</button>
+                <button class="reset-btn" onclick="reqDelete('candidate', 'all')">Wipe Candidate List</button>
+            </div>
+        </div>
+
+        <button class="secondary-btn" onclick="location.href='dashboard.html'">
+            ↩️ Back to Dashboard
+        </button>
+    </div>
+
+    <script>
+        async function reqDelete(type, scope) {
+            const idInput = type === 'voter' ? document.getElementById('voterId') : document.getElementById('candidateId');
+            const id = idInput.value;
+
+            // Validation
+            if (scope === 'single' && !id) {
+                return alert("⚠️ Action Required: Please enter a valid ID.");
+            }
+
+            // Security Confirmation
+            if (scope === 'all') {
+                const confirmMsg = type === 'voter' 
+                    ? "‼️ CRITICAL WARNING: This will delete ALL registered voters and set all candidate results to ZERO. This cannot be undone. Continue?" 
+                    : "‼️ CRITICAL WARNING: This will delete ALL candidates and their votes. Continue?";
+                if (!confirm(confirmMsg)) return;
+            }
+
+            try {
+                // Connecting to VotingController.java
+                const url = `/api/admin/delete?type=${type}&scope=${scope}&id=${id}`;
+                
+                const res = await fetch(url, { method: 'DELETE' });
+                const resultText = await res.text();
+
+                if (res.ok) {
+                    alert("✅ Success: " + resultText);
+                    location.reload(); 
+                } else {
+                    alert("❌ Error: " + resultText);
+                }
+            } catch (error) {
+                console.error("Delete operation failed:", error);
+                alert("⚠️ System Error: Database connection lost. Please check your server status.");
+            }
+        }
+    </script>
+</body>
+</html>

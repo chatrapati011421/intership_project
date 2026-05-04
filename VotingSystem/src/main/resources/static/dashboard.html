@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        const isAdmin = sessionStorage.getItem("adminLoggedIn") === "true";
+        const isLockedPass = sessionStorage.getItem("lockedModeActive") === "true";
+
+        if (!isAdmin && !isLockedPass) {
+            window.location.href = "index.html";
+        }
+    </script>
+</head>
+<body oncontextmenu="return false;">
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card">
+        <h2>🛡️ Admin Control Panel</h2>
+        <button onclick="location.href='reg_candidate.html'">1. Add Candidates</button>
+        <button onclick="location.href='reg_voter.html'">2. Enroll Voters</button>
+        <button onclick="location.href='result.html'">3. View Live Results</button>
+        <hr>
+        <button style="background:#28a745;" onclick="lockAndNavigate('voterLogin.html')">🚀 Open Voter Portal (LOCK SYSTEM)</button>
+        <button style="background: #28a745;" onclick="secureLockAndNavigate('manage_db.html')">⚙️ Remove Voters/Candidates (PASSWORD REQ)</button>
+        <br>
+        <button style="background:#dc3545; margin-top: 20px;" onclick="logout()">Logout Admin</button>
+    </div>
+
+    <script>
+        function lockAndNavigate(target) {
+            if (confirm("⚠️ SYSTEM LOCK ALERT: Dashboard will be locked for voting. Proceed?")) {
+                sessionStorage.removeItem("adminLoggedIn");
+                sessionStorage.setItem("voterModeActive", "true");
+                window.location.href = target;
+            }
+        }
+
+        function secureLockAndNavigate(target) {
+            const password = prompt("🔐 SECURITY CHECK: Enter Admin Password:");
+            if (password === "admin123") { 
+                sessionStorage.removeItem("adminLoggedIn");
+                sessionStorage.setItem("lockedModeActive", "true");
+                window.location.href = target;
+            } else if (password !== null) {
+                alert("❌ Incorrect Password!");
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

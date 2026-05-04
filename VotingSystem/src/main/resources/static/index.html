@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Election 2026</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 40px 20px;
+            overflow-y: auto; /* Allows scrolling for longer content */
+        }
+
+        .brand-container { margin-bottom: 30px; text-align: center; }
+
+        /* ABOUT SECTION styling */
+        .about-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 800px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 105, 180, 0.3); /* Subtle pink tint */
+            text-align: left;
+        }
+
+        /* CONTACT FOOTER styling */
+        .contact-section {
+            background: rgba(255, 243, 205, 0.95); /* Light yellow tint */
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1100px;
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            border: 1px solid #ffeeba;
+        }
+
+        .contact-col h4 { margin: 0 0 10px 0; color: #333; display: flex; align-items: center; gap: 8px; }
+        .contact-col p { font-size: 0.85rem; margin: 0; color: #555; line-height: 1.4; }
+
+        @media (max-width: 768px) {
+            .contact-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-container">
+        <img src="logo.png" alt="Logo" style="width: 80px;">
+        <h1 style="color: white; text-transform: uppercase; margin: 10px 0;">Digital Election 2026</h1>
+    </div>
+
+    <div class="about-card">
+        <h3 style="color: #2c3e50; margin-top: 0;">About ECI</h3>
+        <p style="color: #444; font-size: 0.95rem;">
+            The Election Commission of India is an autonomous constitutional authority responsible for administering Union and State election processes in India. 
+            The body administers elections to the Lok Sabha, Rajya Sabha, State Legislative Assemblies in India, and the offices of the President and Vice President in the country.
+        </p>
+        <a href="#" style="color: #007bff; text-decoration: none; font-weight: bold; font-size: 0.9rem;">Read more ↗</a>
+    </div>
+
+    <div class="card" style="margin-bottom: 30px;">
+        <h2 style="margin-top: 0;">Admin Portal Login</h2>
+        <input type="text" id="user" placeholder="Admin Username">
+        <input type="password" id="pass" placeholder="Admin Password">
+        <button onclick="login()">Access Dashboard</button>
+    </div>
+
+    <div class="contact-section">
+        <div class="contact-col">
+            <h4>📞 Contact Number</h4>
+            <p>1950 (Toll-free Number)</p>
+        </div>
+        <div class="contact-col">
+            <h4>🏠 Postal Address</h4>
+            <p>Election Commission Of India, Nirvachan Sadan, Ashoka Road, New Delhi 110001</p>
+        </div>
+        <div class="contact-col">
+            <h4>📧 Email</h4>
+            <p>complaints@eci.gov.in</p>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: document.getElementById('user').value,
+                    password: document.getElementById('pass').value
+                })
+            });
+            if (await res.text() === "SUCCESS") {
+                sessionStorage.setItem("adminLoggedIn", "true");
+                window.location.href = "dashboard.html";
+            } else { alert("Invalid Credentials"); }
+        }
+    </script>
+</body>
+</html>

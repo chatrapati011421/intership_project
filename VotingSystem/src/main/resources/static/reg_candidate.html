@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Candidate</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+    const isAdmin = sessionStorage.getItem("adminLoggedIn") === "true";
+    const isLockedPass = sessionStorage.getItem("lockedModeActive") === "true";
+
+    if (!isAdmin && !isLockedPass) {
+        window.location.href = "index.html";
+    }
+</script>
+</head>
+<body>
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card">
+        <h2>Add New Candidate</h2>
+        <input type="text" id="cname" placeholder="Candidate Name">
+        <input type="text" id="csymbol" placeholder="Party Symbol">
+        <button onclick="addCandidate()">Save Candidate</button>
+        <button class="secondary-btn" onclick="location.href='dashboard.html'">Back to Dashboard</button>
+    </div>
+
+    <script>
+        async function addCandidate() {
+            const name = document.getElementById('cname').value;
+            const symbol = document.getElementById('csymbol').value;
+
+            if(!name || !symbol) return alert("Fill all fields");
+
+            const res = await fetch('/api/admin/register-candidate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name: name, partySymbol: symbol })
+            });
+            alert(await res.text());
+            location.reload();
+        }
+    </script>
+</body>
+</html>

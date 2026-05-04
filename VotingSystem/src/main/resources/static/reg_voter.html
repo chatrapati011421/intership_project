@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enroll Voter</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <script>
+    const isAdmin = sessionStorage.getItem("adminLoggedIn") === "true";
+    const isLockedPass = sessionStorage.getItem("lockedModeActive") === "true";
+
+    if (!isAdmin && !isLockedPass) {
+        window.location.href = "index.html";
+    }
+</script>
+</head>
+<body>
+    <div class="brand-container">
+        <img src="logo.png" alt="Election Logo" class="election-logo">
+        <h1 class="election-header">Digital Election 2026</h1>
+    </div>
+    <div class="card">
+        <h2>Voter Enrollment</h2>
+        <input type="text" id="v-id" placeholder="Voter ID">
+        <input type="text" id="v-name" placeholder="Full Name">
+        <input type="email" id="v-email" placeholder="Email for Receipt">
+        <div id="my_camera"></div>
+        <button onclick="registerVoter()">Capture & Save</button>
+        <button class="secondary-btn" onclick="location.href='dashboard.html'">Back to Dashboard</button>
+    </div>
+
+    <script>
+        Webcam.set({ width: 320, height: 240, image_format: 'jpeg', jpeg_quality: 90 });
+        Webcam.attach('#my_camera');
+
+        async function registerVoter() {
+            const id = document.getElementById('v-id').value;
+            const name = document.getElementById('v-name').value;
+            const email = document.getElementById('v-email').value;
+
+            if(!id || !name || !email) return alert("Fill all fields, including email");
+
+            Webcam.snap(async (data_uri) => {
+                const res = await fetch('/api/admin/register-voter', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        voterId: id, 
+                        name: name, 
+                        email: email, // Maps to Voter.java email field
+                        faceData: data_uri 
+                    })
+                });
+                const result = await res.text();
+                if(result === "ALREADY_EXISTS") alert("ID already registered!");
+                else alert(result);
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>

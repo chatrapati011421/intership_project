@@ -1,0 +1,141 @@
+/* 1. Global Reset & Traditional Voting Background */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Using your uploaded image_c9301d.jpg as the full background */
+    /* Dark overlay (0.7 opacity) is applied so white cards pop */
+    background: linear-gradient(rgba(0, 0, 0,0.7), rgba(0, 0, 0,0.7)), 
+                url('image_c9301d.jpg'); /* Placeholder: ensure this filename is correct */
+    
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Keeps the traditional image still while scrolling */
+    
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+/* 2. Glassmorphism Card (Translucent Glass Effect against image) */
+.card {
+    background: rgba(255, 255, 255, 0.92); /* Translucent white */
+    backdrop-filter: blur(15px); /* Premium frost effect over the background */
+    -webkit-backdrop-filter: blur(15px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    width: 90%;
+    max-width: 550px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* 3. Form Elements */
+input {
+    width: 90%;
+    padding: 12px 15px;
+    margin: 12px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+/* 4. Buttons */
+button {
+    width: 100%;
+    background: #28a745; /* Success Green */
+    color: white;
+    border: none;
+    padding: 14px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #218838;
+}
+
+.secondary-btn {
+    background: #6c757d !important; /* Neutral Gray */
+}
+
+/* Danger Buttons (marked #dc3545 in manage_db.html) */
+button[style*="background:#dc3545"] {
+    background: #dc3545 !important;
+}
+
+/* 5. Biometric Elements */
+#my_camera {
+    width: 320px !important;
+    height: 240px !important;
+    border: 4px solid #28a745;
+    border-radius: 12px;
+    margin: 20px auto;
+    background: #000;
+}
+
+/* 6. Management Sections (manage_db.html) */
+.section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.05); /* Soft contrast inside glass card */
+    border-radius: 10px;
+    text-align: left;
+}
+
+/* 7. Results Page (Chart Canvas) */
+canvas {
+    max-width: 100%;
+    margin: 20px 0;
+}
+
+.brand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+            
+        }
+
+        /* Logo Styling */
+        .election-logo {
+            width: 120px; /* Adjust size as needed */
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+            border-radius: 30px;
+        }
+
+        /* Election Name Styling */
+        .election-header {
+            color: #ffffff;
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            margin: 0;
+        }
+
+        /* Subtle animation for the header */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
